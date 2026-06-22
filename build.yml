@@ -1,1 +1,56 @@
+name: Flutter Build APK
 
+on:
+  workflow_dispatch:
+    inputs:
+      release_url:
+        description: 'URL release ZIP'
+        required: true
+      tag:
+        description: 'Tag release'
+        required: true
+      build_type:
+        description: 'Debug or Release'
+        required: false
+        default: 'release'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+
+      - name: Download project ZIP
+        run: |
+          curl -L -o project.zip "${{ github.event.inputs.release_url }}"
+          unzip -o project.zip -d project/
+          ls -la project/
+
+      - name: Flutter Pub Get
+        working-directory: project
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: project
+        run: |
+          if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
+            flutter build apk --debug
+          else
+            flutter build apk --release --no-tree-shake-icons
+          fi
+          ls -la build/app/outputs/flutter-apk/
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-apk
+          path: project/build/app/outputs/flutter-apk/*.apk
