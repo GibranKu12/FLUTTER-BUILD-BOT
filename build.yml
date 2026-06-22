@@ -33,7 +33,6 @@ jobs:
         run: |
           curl -L -o project.zip "${{ github.event.inputs.release_url }}"
           unzip -o project.zip -d project/
-          ls -la project/
 
       - name: Flutter Pub Get
         working-directory: project
@@ -47,7 +46,6 @@ jobs:
           else
             flutter build apk --release --no-tree-shake-icons
           fi
-          ls -la build/app/outputs/flutter-apk/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
